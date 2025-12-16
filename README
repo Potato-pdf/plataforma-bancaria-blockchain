@@ -1,245 +1,503 @@
-# Plataforma Bancaria Blockchain
+# 🏦 Plataforma Bancaria Blockchain
 
-Plataforma financiera completa que combina un banco digital, blockchain privado, exchange de criptomonedas y sistema de inversiones.
+> Ecosistema financiero completo que combina un banco digital, blockchain privado permisionado, exchange de criptomonedas y sistema de inversiones con trazabilidad inmutable.
 
----
-
-## 🔵 Módulo 1 — Sistema Bancario Tradicional
-
-Funcionalidades estándar de un banco digital con características avanzadas.
-
-### 1.1 Cuentas bancarias
-
-Creación de cuentas de ahorro, débito y cuentas de inversión.
-
-**Cada cuenta debe tener:**
-- Número CLABE / equivalente interno
-- Balance
-- Historial completo
-- Límites de operación configurables
-- Estado (activa, bloqueada, cancelada)
-
-### 1.2 Movimientos y transferencias
-
-- Transferencias internas instantáneas
-- Transferencias a otros bancos (simuladas o reales)
-- Programación de pagos recurrentes
-- Categorías automáticas para gastos
-- Justificación y comprobantes
-
-### 1.3 Tarjetas
-
-- Tarjetas virtuales y físicas (simulación)
-- Generación de números tokenizados
-- Límites, bloqueo/desbloqueo
-- Historial de uso
-
-### 1.4 Créditos y préstamos
-
-- Solicitud, evaluación y aprobación automática/manual
-- Simulador de intereses
-- Calendario de pagos
-- Penalizaciones por retraso
+[![License](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
+[![TypeScript](https://img.shields.io/badge/TypeScript-5.0-blue)](https://www.typescriptlang.org/)
+[![Rust](https://img.shields.io/badge/Rust-1.75-orange)](https://www.rust-lang.org/)
+[![Go](https://img.shields.io/badge/Go-1.21-cyan)](https://golang.org/)
 
 ---
 
-## 🟣 Módulo 2 — Blockchain Interno (Permissionado)
+## 📋 Tabla de Contenidos
 
-Ledger blockchain privado con las siguientes características:
-- ✅ Permissionado (solo validadores autorizados)
-- ⚡ Rápido (finalidad en segundos)
-- 🪙 Soporte para activos tokenizados
+- [Arquitectura del Sistema](#-arquitectura-del-sistema)
+- [Stack Tecnológico](#-stack-tecnológico)
+- [Módulos Funcionales](#-módulos-funcionales)
+- [Inicio Rápido](#-inicio-rápido)
+- [Requisitos del Sistema](#-requisitos-del-sistema)
 
-### 2.1 Blockchain base
+---
 
-**Cada movimiento crítico del banco debe reflejarse on-chain:**
-- Transferencias
-- Operaciones de compra-venta de cripto
+## 🏗️ Arquitectura del Sistema
+
+```
+┌─────────────────────────────────────────────────────────────────┐
+│                         API Gateway                              │
+│                    (Rate Limiting + Auth)                        │
+└───────────────────────────┬─────────────────────────────────────┘
+                            │
+        ┌───────────────────┼───────────────────┐
+        │                   │                   │
+        ▼                   ▼                   ▼
+┌──────────────┐   ┌──────────────┐   ┌──────────────┐
+│ Core Bancario│   │    Ledger    │   │  Blockchain  │
+│  (TypeScript)│   │    (Rust)    │   │    (Rust)    │
+└──────┬───────┘   └──────┬───────┘   └──────┬───────┘
+       │                   │                   │
+       └───────────────────┼───────────────────┘
+                           │
+                    ┌──────▼──────┐
+                    │    Kafka    │
+                    │  (Eventos)  │
+                    └─────────────┘
+```
+
+---
+
+## 🛠️ Stack Tecnológico
+
+### **Lenguajes de Programación**
+
+| Lenguaje   | Uso Principal                           | Módulos                                    |
+|------------|----------------------------------------|-------------------------------------------|
+| TypeScript | Backend de alto nivel, lógica de negocio | Core Bancario, Inversiones, KYC/AML, Orquestador |
+| Rust       | Servicios críticos, bajo nivel         | Ledger Financiero, Blockchain, Custodia   |
+| Go         | Alta concurrencia, baja latencia       | Exchange Engine, Pricing & Oracles        |
+
+### **Bases de Datos**
+
+| Tecnología     | Tipo              | Uso                                    |
+|----------------|-------------------|----------------------------------------|
+| PostgreSQL     | Relacional        | Core Bancario, Ledger, Inversiones, KYC|
+| Redis          | Cache/In-Memory   | Sesiones, Order Book, Cache de precios |
+| TimescaleDB    | Series temporales | Histórico de precios y órdenes         |
+| RocksDB        | Key-Value         | Blockchain storage, Event Sourcing     |
+| Elasticsearch  | Búsqueda          | Usuarios, KYC/AML                      |
+| MongoDB        | Documental        | Logs, auditoría                        |
+
+### **Infraestructura**
+
+| Tecnología  | Propósito                              |
+|-------------|----------------------------------------|
+| Docker      | Containerización de servicios          |
+| Kafka       | Event streaming y comunicación async   |
+| gRPC        | Comunicación inter-servicios           |
+| WebSockets  | Precios en tiempo real                 |
+| Keycloak    | Autenticación y autorización (IAM)     |
+| Vault       | Gestión de secretos y claves privadas  |
+| Temporal.io | Orquestación de workflows              |
+| BullMQ      | Job scheduling                         |
+
+### **Frameworks**
+
+- **NestJS** - Backend TypeScript (DDD + Hexagonal)
+- **Substrate** - Framework blockchain (Rust)
+- **Actix/Axum** - Web framework para Rust
+- **Gin/Echo** - Web framework para Go
+
+---
+
+---
+
+## � Módulos Funcionales
+
+### 🏦 Módulo 1 — Core Bancario
+> **Stack:** TypeScript (NestJS) + PostgreSQL + Redis + Kafka
+
+**Responsabilidades:**
+- Gestión de cuentas bancarias (ahorro, débito, inversión)
+- Transferencias internas y externas
+- Tarjetas virtuales y físicas
+- Créditos y préstamos
+- Reglas de negocio bancarias
+- Orquestación de operaciones
+- Emisión de eventos financieros
+
+**Arquitectura:** DDD + Hexagonal  
+**Seguridad:** Keycloak + JWT
+
+🔒 **NO mueve dinero directamente, solo emite comandos**
+
+---
+
+### 🧱 Módulo 2 — Ledger Financiero (CRÍTICO)
+> **Stack:** Rust + RocksDB/PostgreSQL (append-only) + gRPC
+
+**Responsabilidades:**
+- **Fuente de verdad** de todos los saldos
+- Event Sourcing puro (inmutable)
+- Aplicar y validar transacciones
+- Garantizar invariantes financieras
+- Firma criptográfica de eventos (ed25519/secp256k1)
+- Validación de balances
+
+**Arquitectura:** Event Sourcing  
+⚠️ **Este servicio SÍ mueve dinero real**
+
+---
+
+### 🔗 Módulo 3 — Blockchain Permissionado
+> **Stack:** Rust (Substrate) + RocksDB + Kafka
+
+**Responsabilidades:**
+- Registro inmutable de operaciones críticas
+- Validación de bloques (PoA/PBFT)
+- Ejecución de smart contracts internos
+- Block Explorer interno
+- API blockchain pública (lectura)
+
+**Características:**
+- ⛓️ Consenso: Proof of Authority (PoA) / PBFT
+- ⚡ Finalidad en segundos
+- 🔐 Solo validadores autorizados
+- 📝 Merkle trees para pruebas de integridad
+
+**Eventos registrados on-chain:**
+- Transferencias bancarias
+- Compra/venta de cripto
 - Liquidaciones
 - Emisión de intereses
 
-**El blockchain debe tener:**
-- Bloques, validadores, consenso PoA/PBFT
-- Merkle root para pruebas de integridad
-- API para consultar estado y bloques
-- Visualizador de bloques (Block Explorer interno)
+---
 
-### 2.2 Cuentas blockchain (Wallets)
+### 💱 Módulo 4 — Exchange Engine
+> **Stack:** Go + Redis (Order Book) + TimescaleDB + gRPC/WebSockets
 
-**Cada usuario tendrá automáticamente:**
-- Una cuenta bancaria tradicional
-- Una wallet blockchain interna
+**Responsabilidades:**
+- Matching engine de alta velocidad
+- Gestión de libro de órdenes (in-memory)
+- Ejecución de órdenes (market, limit, stop)
+- Cálculo de precio final con comisiones
+- Conversiones fiat ↔ crypto ↔ crypto
 
-**Las wallets deben manejar:**
-- Token interno FIAT (por ejemplo USDX)
-- Tokens representando criptomonedas reales (BTCX, ETHX, etc.)
-- Tokens de inversión (fondos tokenizados)
-
-### 2.3 Smart Contracts internos
-
-**Capacidad de ejecutar contratos smart para:**
-- Intereses compuestos
-- Congelación de fondos
-- Planes de inversión
-- Ahorro automático
-- Emisión y quema de tokens representativos
+**Características:**
+- ⚡ Ultra baja latencia
+- 📊 Histórico en TimescaleDB
+- 🔄 WebSockets para updates en tiempo real
 
 ---
 
-## 🟡 Módulo 3 — Exchange de Criptomonedas
+### � Módulo 5 — Pricing & Oracles
+> **Stack:** Go + Redis + Kafka + WebSockets
 
-Exchange integrado dentro del banco (Broker + Casa de Cambio).
+**Responsabilidades:**
+- Integración con exchanges externos (Binance, Coinbase, Kraken)
+- Normalización de precios entre mercados
+- Oráculo de precios interno
+- Propagación de precios en tiempo real
+- Actualización continua (cada X segundos)
 
-### 3.1 Precios y oráculos
-
-Integración con APIs de precio de criptomonedas.
-
-**Oráculo interno que:**
-- Actualice precios cada X segundos
-- Propague precios al frontend en tiempo real
-- Normalice distintos mercados
-
-### 3.2 Compra y venta de cripto
-
-Compra/venta instantánea al precio del mercado + comisión del banco.
-
-**Debe calcular:**
-- Precio base
-- Comisión
-- Spread configurable
-- Impuestos
-- Precio final de operación
-
-### 3.3 Conversiones
-
-- Fiat → Crypto
-- Crypto → Fiat
-- Crypto → Crypto (BTC → ETH)
-
-### 3.4 Libro de órdenes (modo avanzado)
-
-- Ordenes limit, market y stop
-- Matching engine interno cuando se usen órdenes limit
-- Historial de trading
+**APIs integradas:**
+- Binance API
+- Coinbase Pro API
+- Kraken API
+- Agregación multi-exchange
 
 ---
 
-## 🟢 Módulo 4 — Inversiones Crypto y Tradicionales
+### � Módulo 6 — Inversiones & Staking
+> **Stack:** TypeScript (NestJS) + PostgreSQL + Temporal.io/BullMQ
 
-Los usuarios pueden invertir dentro del banco tanto con fiat como con cripto.
-
-### 4.1 Staking / Rendimientos
-
-- Planes de staking para BTC, ETH y token internos
-- Rendimientos anuales configurables
-- Bloqueo temporal de fondos
-
-### 4.2 Fondos de inversión tokenizados
-
-Fondos que combinan:
-- Acciones
-- ETFs
-- Criptomonedas
-
-Representados como tokens internos (FUNDX). El usuario compra unidades del fondo como si fuera cripto.
-
-### 4.3 Portafolio
-
-**Dashboard completo con:**
-- Rendimientos
-- Riesgo
-- Diversificación
-- Gráficos
-- Comparativas
-
-### 4.4 Autoinversión
-
-**Configurar estrategias automatizadas:**
+**Responsabilidades:**
+- Planes de staking (BTC, ETH, tokens internos)
+- Fondos de inversión tokenizados (acciones + ETFs + crypto)
+- Cálculo de rendimientos
 - Dollar Cost Averaging (DCA)
-- Rebalanceo automático
-- Compras programadas
+- Rebalanceo automático de portafolio
+- Scheduler de inversiones programadas
+
+**Características:**
+- 📊 Dashboard de portafolio completo
+- 🎯 Estrategias automatizadas
+- 💰 Rendimientos configurables
+- 🔒 Bloqueo temporal de fondos
 
 ---
 
-## 🔴 Módulo 5 — Administración y Operaciones Bancarias
+### � Módulo 7 — Usuarios, KYC & AML
+> **Stack:** TypeScript (NestJS) + PostgreSQL + Elasticsearch
 
-Backend administrativo completo.
-
-### 5.1 Gestión de usuarios
-
-- KYC / AML obligatorio
+**Responsabilidades:**
+- Gestión de usuarios y perfiles
+- KYC (Know Your Customer) obligatorio
+- AML (Anti Money Laundering)
 - Verificación de identidad
-- Flags de riesgo
+- Sistema de flags de riesgo
 - Roles y permisos
 
-### 5.2 Control de operaciones
-
-- Logs detallados
-- Auditoría 100% trazable:
-  - Operación → Bloque blockchain → Usuario → Dispositivo
-- Reversión limitada mediante smart contract administrativo
-
-### 5.3 Ajustes globales
-
-- Comisiones
-- Impuestos
-- Límite diario de retiro
-- Validadores de la blockchain
-- Horarios de mantenimiento
+**Integraciones:**
+- SumSub / Onfido (verificación de identidad)
+- Elasticsearch (búsqueda de usuarios)
 
 ---
 
-## 🟠 Módulo 6 — Seguridad y Cumplimiento
+### 🛡️ Módulo 8 — Seguridad & Custodia (CRÍTICO)
+> **Stack:** Rust + Vault/HSM + gRPC
 
-Estándares bancarios reales.
+**Responsabilidades:**
+- Custodia de claves privadas
+- Firma de transacciones blockchain
+- Gestión de secretos (API keys, tokens)
+- Integración con HSM (Hardware Security Module)
+- Encriptación de datos sensibles
 
-**Características de seguridad:**
-- 🔐 Encriptación de datos en reposo y tránsito
-- 🔑 Hash de contraseñas con Argon2
+**Seguridad:**
+- 🔐 Vault de HashiCorp
+- 🔑 HSM virtual/hardware
+- � Encriptación en reposo y tránsito
+- � Argon2 para passwords
 - 📱 2FA obligatorio
-- 🛡️ Detección de fraude
-- ⏱️ Rate limiting
-- 🚨 Sistema de alertas y bloqueos automáticos
-- 🔒 Seguridad para claves privadas: HSM virtual o hardware
 
 ---
 
-## 🟤 Módulo 7 — Frontend (Web/App)
+### � Módulo 9 — Notificaciones
+> **Stack:** TypeScript + Kafka
 
-Interfaz moderna, rápida y clara.
+**Responsabilidades:**
+- Email (transaccional y marketing)
+- SMS (2FA, alertas)
+- Push notifications (web/mobile)
+- Webhooks
 
-### Funciones principales del frontend
+**Canales:**
+- � SMTP (emails)
+- 📱 Twilio (SMS)
+- 🔔 Firebase Cloud Messaging (push)
 
-- Dashboard financiero
-- Gestión de cuentas bancarias
-- Wallet crypto
-- Trading (simplicado y avanzado)
-- Portafolio de inversión
+---
+
+### 🧠 Módulo 10 — Orquestador de Operaciones
+> **Stack:** TypeScript (NestJS) + Temporal.io
+
+**Responsabilidades:**
+- Implementación de Saga Pattern
+- Orquestación de flujos complejos multi-servicio
+- Rollbacks y compensaciones
+- Gestión de transacciones distribuidas
+- Reintentos automáticos
+
+**Características:**
+- ♻️ Idempotencia garantizada
+- � Retry con backoff exponencial
+- � Auditoría completa de workflows
+- 🎯 Consistencia eventual
+
+---
+
+---
+
+## � Inicio Rápido
+
+### Prerequisitos
+
+- Docker & Docker Compose
+- Node.js 20+ (para módulos TypeScript)
+- Rust 1.75+ (para Ledger y Blockchain)
+- Go 1.21+ (para Exchange y Pricing)
+- Git
+
+### 1️⃣ Clonar el repositorio
+
+```bash
+git clone https://github.com/Potato-pdf/plataforma-bancaria-blockchain.git
+cd plataforma-bancaria-blockchain
+```
+
+### 2️⃣ Configurar variables de entorno
+
+```bash
+cp .env.example .env
+# Editar .env con tus configuraciones
+```
+
+### 3️⃣ Levantar infraestructura
+
+```bash
+# Levantar todas las bases de datos y servicios
+docker-compose up -d
+
+# Verificar que todos los servicios estén corriendo
+docker-compose ps
+```
+
+**Servicios disponibles:**
+- PostgreSQL: `localhost:5432`
+- Redis: `localhost:6379`
+- TimescaleDB: `localhost:5433`
+- Kafka: `localhost:9093`
+- Elasticsearch: `localhost:9200`
+- Keycloak: `http://localhost:8080`
+- Vault: `http://localhost:8200`
+- MongoDB: `localhost:27017`
+
+### 4️⃣ Ver logs
+
+```bash
+# Ver logs de todos los servicios
+docker-compose logs -f
+
+# Ver logs de un servicio específico
+docker-compose logs -f postgres
+docker-compose logs -f kafka
+```
+
+### 5️⃣ Detener servicios
+
+```bash
+# Detener servicios
+docker-compose down
+
+# Detener y eliminar volúmenes (⚠️ CUIDADO: elimina todos los datos)
+docker-compose down -v
+```
+
+---
+
+## 💻 Requisitos del Sistema
+
+### Desarrollo
+
+| Componente | Mínimo | Recomendado |
+|------------|--------|-------------|
+| CPU        | 4 cores | 8+ cores   |
+| RAM        | 8 GB    | 16+ GB     |
+| Disco      | 20 GB   | 50+ GB SSD |
+| OS         | Linux/macOS | Ubuntu 22.04+ |
+
+### Producción
+
+| Componente | Mínimo | Recomendado |
+|------------|--------|-------------|
+| CPU        | 8 cores | 16+ cores  |
+| RAM        | 16 GB   | 32+ GB     |
+| Disco      | 100 GB SSD | 500+ GB NVMe |
+| Red        | 100 Mbps | 1+ Gbps    |
+
+---
+
+## � Características del Sistema
+
+### Funcionalidades Bancarias Tradicionales
+
+✅ **Cuentas bancarias**
+- Ahorro, débito, inversión
+- Número CLABE / equivalente interno
+- Límites configurables
+- Estados (activa, bloqueada, cancelada)
+
+✅ **Transferencias**
+- Internas instantáneas
+- Externas (simuladas/reales)
+- Pagos recurrentes programados
+- Categorización automática
+
+✅ **Tarjetas**
+- Virtuales y físicas (simulación)
+- Tokenización de números
+- Gestión de límites
 - Historial completo
-- Perfil y seguridad
-- Módulo administrativo (si es admin)
 
-### Requisitos de UX
+✅ **Créditos y Préstamos**
+- Simulador de intereses
+- Aprobación automática/manual
+- Calendario de pagos
+- Penalizaciones por retraso
 
-- ⚡ Real-time data
-- 🔔 Notificaciones
-- 📊 Gráficos interactivos
-- 🌙 Modo oscuro
-- 🚀 Flujo de compra/venta rápido
+### Funcionalidades Blockchain
+
+⛓️ **Registro Inmutable**
+- Todas las operaciones críticas on-chain
+- Merkle proofs de integridad
+- Block Explorer interno
+- API de consulta pública
+
+🪙 **Wallets Blockchain**
+- Wallet automática por usuario
+- Token FIAT interno (USDX)
+- Tokens crypto (BTCX, ETHX)
+- Tokens de fondos de inversión
+
+📜 **Smart Contracts**
+- Intereses compuestos
+- Congelación de fondos
+- Planes de inversión automáticos
+- Ahorro programado
+
+### Funcionalidades de Exchange
+
+💱 **Trading**
+- Órdenes: Market, Limit, Stop
+- Matching engine ultra-rápido
+- Histórico completo
+- WebSockets en tiempo real
+
+💰 **Conversiones**
+- Fiat → Crypto
+- Crypto → Fiat  
+- Crypto → Crypto
+
+📈 **Precios**
+- Oráculos multi-exchange
+- Actualización continua
+- Normalización de mercados
+- Spreads configurables
+
+### Funcionalidades de Inversión
+
+💹 **Staking**
+- BTC, ETH, tokens internos
+- Rendimientos configurables
+- Bloqueo temporal
+
+📊 **Fondos Tokenizados**
+- Acciones + ETFs + Crypto
+- Unidades como tokens
+- Rebalanceo automático
+
+🎯 **Estrategias Automatizadas**
+- Dollar Cost Averaging (DCA)
+- Inversiones programadas
+- Alertas de precio
+
+### Seguridad
+
+🔐 **Autenticación**
+- Keycloak IAM
+- JWT tokens
+- 2FA obligatorio
+- Refresh tokens
+
+🛡️ **Protección**
+- Encriptación end-to-end
+- Argon2 para passwords
+- Rate limiting
+- Detección de fraude
+- Alertas automáticas
+
+🔒 **Custodia**
+- HSM para claves privadas
+- Vault para secretos
+- Firma multi-sig (opcional)
 
 ---
 
-## 🟣 Requerimientos No Funcionales
+## 🏛️ Requerimientos No Funcionales
 
-- ✅ Alta disponibilidad
-- 📝 Trazabilidad completa
-- 📈 Escalabilidad horizontal
-- 🌐 API Gateway con rate limiting
-- 🔄 WebSockets para precios y balances
-- 🔐 Auditoría inmutable
-- 🧩 Bajo acoplamiento (DDD + microservicios)
-- ⚡ Latencia máxima por operación: 2–5 segundos
-- 🔄 Consistencia eventual en blockchain, fuerte para saldos bancarios
+| Categoría | Requisito | Valor |
+|-----------|-----------|-------|
+| **Disponibilidad** | Uptime | 99.9% |
+| **Latencia** | Operación bancaria | < 2s |
+| **Latencia** | Trading | < 100ms |
+| **Escalabilidad** | Usuarios concurrentes | 100,000+ |
+| **Throughput** | Transacciones/segundo | 10,000+ |
+| **Consistencia** | Saldos bancarios | Fuerte |
+| **Consistencia** | Blockchain | Eventual |
+| **Retención** | Logs y auditoría | 7 años |
+| **Backup** | Frecuencia | Cada 6 horas |
+| **RTO** | Recovery Time Objective | < 4 horas |
+| **RPO** | Recovery Point Objective | < 15 min |
+
+### Principios Arquitectónicos
+
+- ✅ **Microservicios** - Bajo acoplamiento, alta cohesión
+- ✅ **Event-Driven** - Comunicación asíncrona vía Kafka
+- ✅ **Domain-Driven Design** - Lógica de negocio encapsulada
+- ✅ **Event Sourcing** - Inmutabilidad en el Ledger
+- ✅ **CQRS** - Separación de lectura/escritura donde aplique
+- ✅ **Idempotencia** - Operaciones seguras ante reintentos
+- ✅ **Circuit Breaker** - Tolerancia a fallos
+- ✅ **Observabilidad** - Logs, métricas, trazas distribuidas
 
 ---
 
@@ -247,11 +505,45 @@ Interfaz moderna, rápida y clara.
 
 Una plataforma que combine:
 
-- ✅ **Banco digital completo**
-- ⛓️ **Blockchain financiero y auditable**
-- 💱 **Exchange integrado**
-- 💼 **Sistema de inversiones**
-- 📜 **Smart contracts internos**
-- 🔒 **Seguridad bancaria real**
+- ✅ **Banco digital completo** con todas las funcionalidades tradicionales
+- ⛓️ **Blockchain financiero auditable** con smart contracts internos
+- 💱 **Exchange integrado** de alta velocidad con matching engine
+- 💼 **Sistema de inversiones** automatizado con staking y fondos tokenizados
+- 📜 **Smart contracts** para automatización de operaciones financieras
+- 🔒 **Seguridad bancaria real** con estándares de la industria
+- 📝 **Trazabilidad 100%** - Operación → Blockchain → Usuario → Dispositivo
 
-Todo debe sentirse como un **ecosistema financiero unificado, profesional y completamente trazable**.
+**Todo debe sentirse como un ecosistema financiero unificado, profesional y completamente trazable.**
+
+---
+
+## 📄 Licencia
+
+Este proyecto está bajo la licencia MIT. Ver [LICENSE](LICENSE) para más detalles.
+
+---
+
+## 👥 Contribuciones
+
+Las contribuciones son bienvenidas. Por favor:
+
+1. Fork el proyecto
+2. Crea una rama para tu feature (`git checkout -b feature/AmazingFeature`)
+3. Commit tus cambios (`git commit -m 'Add some AmazingFeature'`)
+4. Push a la rama (`git push origin feature/AmazingFeature`)
+5. Abre un Pull Request
+
+---
+
+## 📞 Contacto
+
+**Proyecto:** Plataforma Bancaria Blockchain  
+**Repositorio:** [https://github.com/Potato-pdf/plataforma-bancaria-blockchain](https://github.com/Potato-pdf/plataforma-bancaria-blockchain)
+
+---
+
+<div align="center">
+  
+**Desarrollado con ❤️ para revolucionar las finanzas**
+
+</div>
